@@ -11,7 +11,9 @@
 | **`GitHub/Repositories/ArchiMateAiStudio`** (planned) | Implementation | This architecture folder |
 | **`Architectures/archimate-ai-studio/`** | Source of truth | Markdown + ADRs |
 | **`Architectures/standards/`** | Upstream knowledge | Synced into RAG `standard` chunks |
-| **`Architectures/_research/Archi-LLM-plugin/`** | Reference clone (research) | Prompt + parser patterns — not a runtime dependency |
+| **`docs/fixtures/archi-llm-plugin/`** | Vendored reference snapshot | Prompt + parser patterns — not a runtime dependency |
+| **`docs/fixtures/archisurance-practice-2025/`** | Vendored outline + upstream link | TOGAF phased case study — not a runtime dependency |
+| **`_research/`** | Local shallow clones (gitignored) | Ephemeral upstream inspection |
 | **Archi desktop** | External tool | `.archimate` import/export |
 | **RunPod** | External SaaS | OpenAI-compatible HTTPS |
 | **Neon PostgreSQL** | External DB | Connection string |

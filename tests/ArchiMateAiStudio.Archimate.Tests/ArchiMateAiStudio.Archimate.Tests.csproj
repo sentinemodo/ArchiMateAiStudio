@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\fixtures\minimal\minimal.archimate" CopyToOutputDirectory="PreserveNewest" Link="fixtures\minimal\minimal.archimate" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\ArchiMateAiStudio.Archimate\ArchiMateAiStudio.Archimate.csproj" />
     <ProjectReference Include="..\..\src\ArchiMateAiStudio.Domain\ArchiMateAiStudio.Domain.csproj" />
     <ProjectReference Include="..\..\src\ArchiMateAiStudio.Api\ArchiMateAiStudio.Api.csproj" />

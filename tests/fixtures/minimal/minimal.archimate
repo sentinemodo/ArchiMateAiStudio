@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="Minimal" id="id-minimal-model-000000000000000000000001" version="5.0.0">
+  <folder name="Business" id="id-minimal-folder-business000000001" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Customer" id="id-minimal-actor-customer000000001"/>
+    <element xsi:type="archimate:BusinessProcess" name="Quote" id="id-minimal-process-quote000000001"/>
+  </folder>
+  <folder name="Relations" id="id-minimal-folder-relations00000001" type="relations">
+    <element xsi:type="archimate:AssignmentRelationship" id="id-minimal-rel-assign00000000001" source="id-minimal-actor-customer000000001" target="id-minimal-process-quote000000001"/>
+  </folder>
+</archimate:model>

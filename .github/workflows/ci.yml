@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore
+        run: dotnet restore ArchiMateAiStudio.slnx
+
+      - name: Build
+        run: dotnet build ArchiMateAiStudio.slnx --no-restore -c Release
+
+      - name: Test
+        run: dotnet test ArchiMateAiStudio.slnx --no-build -c Release --verbosity normal
+
+      - name: Vulnerable packages
+        run: dotnet list ArchiMateAiStudio.slnx package --vulnerable --include-transitive
+
+  archimate-roundtrip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Fetch ArchiSurance fixture
+        run: |
+          git clone --depth 1 https://github.com/yasenstar/ArchiMate_ArchiSurance.git _research/ArchiMate_ArchiSurance
+          mkdir -p tests/fixtures/archisurance
+          cp _research/ArchiMate_ArchiSurance/ArchiSurance2025.archimate tests/fixtures/archisurance/archisurance-3.2.archimate
+
+      - name: Restore
+        run: dotnet restore tests/ArchiMateAiStudio.Archimate.Tests/ArchiMateAiStudio.Archimate.Tests.csproj
+
+      - name: ArchiSurance round-trip and XSD validation
+        run: >
+          dotnet test tests/ArchiMateAiStudio.Archimate.Tests/ArchiMateAiStudio.Archimate.Tests.csproj
+          --filter "FullyQualifiedName~ArchiSurance"
+          --verbosity normal

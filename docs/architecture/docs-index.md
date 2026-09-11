@@ -4,6 +4,8 @@
 
 Authoritative external references for implementers. Summaries only — consult linked sources for normative detail.
 
+**Offline copies:** Open Group PDFs, ArchiSurance practice outline, and Archi-LLM-plugin docs live in [`../fixtures/`](../fixtures/) — see [`../fixtures/REVIEW.md`](../fixtures/REVIEW.md) for upstream repo review.
+
 ---
 
 ## ArchiMate & exchange format
@@ -14,6 +16,10 @@ Authoritative external references for implementers. Summaries only — consult l
 | [Schema documentation — archimate3_Model.xsd](https://www.opengroup.org/xsd/archimate/3.1/html-model/) | Element/relationship container structure | 3.0 namespace | 2026-09-11 |
 | [ArchiMate Exchange File Format standard (C19C)](https://publications.opengroup.org/c19c) | Normative exchange specification | 3.1 aligned (3.2 models) | 2026-09-11 |
 | [ArchiSurance Case Study XML (3.2)](https://publications.opengroup.org/y194m) | Reference model for round-trip tests | 3.2 | 2026-09-11 |
+| [`../fixtures/opengroup/archisurance-3.2-case-study.pdf`](../fixtures/opengroup/archisurance-3.2-case-study.pdf) | ArchiSurance 3.2 case study (Y231 PDF) | 3.2 | 2026-09-11 |
+| [`../fixtures/opengroup/sabsa-archimate-modeling-guide.pdf`](../fixtures/opengroup/sabsa-archimate-modeling-guide.pdf) | SABSA overlay modeling with ArchiMate | — | 2026-09-11 |
+| [`../fixtures/opengroup/archimate-4-specification.pdf`](../fixtures/opengroup/archimate-4-specification.pdf) | ArchiMate 4 Specification (forward reference) | 4.0 | 2026-09-11 |
+| [ArchiMate_ArchiSurance (2025 practice)](https://github.com/yasenstar/ArchiMate_ArchiSurance) | Phased TOGAF ADM ArchiSurance models | 3.2 | 2026-09-11 |
 | [`../standards/archimate-index.md`](../standards/archimate-index.md) | Internal layer/aspect/relationship quick reference | 3.2 | workspace |
 
 ---
@@ -25,6 +31,7 @@ Authoritative external references for implementers. Summaries only — consult l
 | [Archi modeling tool](https://www.archimatetool.com/) | Compatibility target for import/export | 2026-09-11 |
 | [Archi plugin development wiki](https://github.com/archimatetool/archi/wiki/Developing-Import-and-Export-Plug-ins) | Exchange format practical notes | 2026-09-11 |
 | [Archi-LLM-plugin / ArchiGPT](https://github.com/fideocam/Archi-LLM-plugin) | Prior art for LLM + ArchiMate JSON patch | 2026-09-11 |
+| [`../fixtures/archi-llm-plugin/`](../fixtures/archi-llm-plugin/) | ArchiGPT system prompt + design docs (snapshot) | 2026-09-11 |
 
 ---
 
