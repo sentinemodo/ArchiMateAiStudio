@@ -1,0 +1,53 @@
+---
+description: C# TDD standards for ArchiMate AI Studio
+globs: "**/*.cs"
+alwaysApply: false
+---
+
+# C# + TDD (ArchiMate AI Studio)
+
+## Red → Green → Refactor
+
+1. Failing xUnit test first
+2. Smallest production change to pass
+3. Refactor with tests green
+4. Bugfix → regression test
+
+```bash
+dotnet test ArchiMateAiStudio.slnx
+```
+
+## Test project
+
+`tests/ArchiMateAiStudio.Archimate.Tests/` — unit tests + `WebApplicationFactory<Program>` API smoke.
+
+Mock RunPod at `ILlmChatClient`; use `StubLlmChatClient` in tests.
+
+## Layers
+
+| Layer | Scope |
+|-------|-------|
+| **Unit** | `Archimate`, `Domain` — parser, validator, ID generator |
+| **Integration** | API controllers with test host |
+
+## Conventions
+
+- **.NET 9**, nullable enabled
+- API routes: `/api/v1/{resource}`
+- LLM output: parse with `ModelPatchParser`; validate with `MetamodelValidator`
+- Hangfire jobs (Phase 1+): idempotent
+
+## Avoid
+
+- Raw LLM XML surgery on `.archimate` files
+- Calling RunPod from unit tests
+- Applying patches without `ChangeProposal` approval path
+
+## Agents
+
+- Architecture → `/project-architect`
+- Implementation → `/tdd`
+- CI → `/cicd-release`
+- Security → `/cybersecurity-design`
+
+Before edits: name **test file**, **assertion**, **layer**. After: run `dotnet test`.

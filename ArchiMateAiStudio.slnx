@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ArchiMateAiStudio.Api/ArchiMateAiStudio.Api.csproj" />
+    <Project Path="src/ArchiMateAiStudio.Application/ArchiMateAiStudio.Application.csproj" />
+    <Project Path="src/ArchiMateAiStudio.Archimate/ArchiMateAiStudio.Archimate.csproj" />
+    <Project Path="src/ArchiMateAiStudio.Domain/ArchiMateAiStudio.Domain.csproj" />
+    <Project Path="src/ArchiMateAiStudio.Infrastructure/ArchiMateAiStudio.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ArchiMateAiStudio.Archimate.Tests/ArchiMateAiStudio.Archimate.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,29 @@
+---
+description: CI/CD and deployment conventions for ArchiMate AI Studio
+globs: ".github/**/*,docs/architecture/delivery/**/*,Dockerfile*,railway.*,vercel.json"
+alwaysApply: false
+---
+
+# CI/CD (ArchiMate AI Studio)
+
+See `docs/architecture/delivery/cicd-conventions.md`.
+
+## Required CI jobs
+
+- `dotnet build` + `dotnet test`
+- **archimate-roundtrip** — ArchiSurance 3.2 fixture import/export + XSD validation
+- `dotnet list package --vulnerable`
+
+## Branches
+
+- `main` — production
+- `develop` — integration
+- `feature/<ticket>-<slug>`
+
+## Secrets (never commit)
+
+`RUNPOD_*`, `DATABASE_URL`, `REDIS_URL`, `R2_*`, `CLERK_*`
+
+## Agent
+
+Pipeline changes → `/cicd-release`

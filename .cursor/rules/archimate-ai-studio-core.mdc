@@ -1,0 +1,41 @@
+---
+description: ArchiMate AI Studio monorepo conventions, modules, and subagents
+alwaysApply: true
+---
+
+# ArchiMate AI Studio — core conventions
+
+## Architecture source of truth
+
+In-repo: `docs/architecture/` (overview, technology, modules, ADRs, cybersecurity, delivery).
+
+## Solution layout
+
+- `src/ArchiMateAiStudio.Domain` — patches, proposals, ports
+- `src/ArchiMateAiStudio.Archimate` — XSD, parser, validator, patch applicator
+- `src/ArchiMateAiStudio.Application` — use cases (MediatR later)
+- `src/ArchiMateAiStudio.Infrastructure` — RunPod, EF, R2, Redis adapters
+- `src/ArchiMateAiStudio.Api` — REST `/api/v1`
+- `tests/ArchiMateAiStudio.Archimate.Tests` — xUnit unit + API smoke
+
+## Non-negotiables
+
+1. **`.archimate` XML is canonical** — AI changes go through `ModelPatch` + approved `ChangeProposal`
+2. **Archi-compatible IDs** — `id-` + 32 lowercase hex via `ArchiMateIdGenerator`
+3. **RunPod only via `ILlmChatClient`** — stub in CI; no direct HTTP from controllers
+4. **ArchiSurance 3.2** — official Open Group reference model (Y194M) for round-trip tests; not a typo
+
+## Subagents (repo-local)
+
+| Agent | Use |
+|-------|-----|
+| `/project-architect` | Solution architecture in `docs/architecture/` |
+| `/enterprise-architect` | EA requirements, viewpoints, traceability |
+| `/cybersecurity-design` | SEC-* requirements, RunPod/RAG security |
+| `/cicd-release` | GitHub Actions, deploy, ArchiSurance CI job |
+| `/tdd` | Test-first C# implementation |
+| `/architecture-compliance` | Pre-release alignment check |
+
+## Phases
+
+0 — Model CRUD + XSD | 1 — RunPod patch loop | 2 — Ingestion + RAG | 3 — Agents + views

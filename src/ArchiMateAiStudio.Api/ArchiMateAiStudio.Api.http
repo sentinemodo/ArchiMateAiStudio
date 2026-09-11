@@ -1,0 +1,6 @@
+@ArchiMateAiStudio.Api_HostAddress = http://localhost:5127
+
+GET {{ArchiMateAiStudio.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

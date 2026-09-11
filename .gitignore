@@ -1,0 +1,41 @@
+## Build
+bin/
+obj/
+out/
+*.user
+*.suo
+*.cache
+*.log
+
+## IDE
+.vs/
+.idea/
+*.swp
+
+## .NET
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Secrets
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+appsettings.Local.json
+**/secrets.json
+
+## Node (Phase 1+ web app)
+node_modules/
+dist/
+.npm
+
+## OS
+Thumbs.db
+.DS_Store
+
+## Test fixtures (large; download locally)
+tests/fixtures/archisurance/*.archimate
+
+## Research clones
+_research/
