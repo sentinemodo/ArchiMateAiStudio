@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\ArchiMateAiStudio.Archimate\ArchiMateAiStudio.Archimate.csproj" />
     <ProjectReference Include="..\ArchiMateAiStudio.Domain\ArchiMateAiStudio.Domain.csproj" />
   </ItemGroup>
 

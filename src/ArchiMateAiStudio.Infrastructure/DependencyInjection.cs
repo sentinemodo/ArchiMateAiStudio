@@ -11,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<ILlmChatClient, StubLlmChatClient>();
         services.AddSingleton<IArchimateModelRepository, InMemoryArchimateModelRepository>();
+        services.AddSingleton<IChangeProposalRepository, InMemoryChangeProposalRepository>();
         return services;
     }
 }
