@@ -1,3 +1,4 @@
+using ArchiMateAiStudio.Application.Generate;
 using ArchiMateAiStudio.Archimate.Digest;
 using ArchiMateAiStudio.Archimate.Models;
 using ArchiMateAiStudio.Archimate.Parsing;
@@ -11,10 +12,14 @@ namespace ArchiMateAiStudio.Api.Controllers;
 public sealed class ModelsController : ControllerBase
 {
     private readonly IArchimateModelRepository _repository;
+    private readonly GenerateModelChangesService _generate;
 
-    public ModelsController(IArchimateModelRepository repository)
+    public ModelsController(
+        IArchimateModelRepository repository,
+        GenerateModelChangesService generate)
     {
         _repository = repository;
+        _generate = generate;
     }
 
     [HttpGet]
@@ -146,6 +151,37 @@ public sealed class ModelsController : ControllerBase
             fileName);
     }
 
+    [HttpPost("{id:guid}/generate")]
+    public async Task<IActionResult> Generate(
+        Guid id,
+        [FromBody] GenerateRequest? request,
+        CancellationToken cancellationToken)
+    {
+        var instruction = request?.Instruction ?? string.Empty;
+        var result = await _generate.GenerateAsync(id, instruction, cancellationToken);
+
+        return result.Outcome switch
+        {
+            GenerateModelChangesOutcome.Success => Ok(new
+            {
+                proposalId = result.Proposal!.Id,
+                status = result.Proposal.Status.ToString(),
+                source = result.Proposal.Source,
+                summary = new
+                {
+                    elementCount = result.Summary!.ElementCount,
+                    relationshipCount = result.Summary.RelationshipCount,
+                    diagramCount = result.Summary.DiagramCount,
+                    elementNames = result.Summary.ElementNames,
+                },
+                patch = result.Proposal.Patch,
+            }),
+            GenerateModelChangesOutcome.NotFound => NotFound(new { error = result.Message }),
+            GenerateModelChangesOutcome.BadRequest => BadRequest(new { error = result.Message }),
+            _ => StatusCode(StatusCodes.Status500InternalServerError),
+        };
+    }
+
     private async Task<IActionResult> CreateEmptyAsync(string name, CancellationToken cancellationToken)
     {
         var emptyXml = EmptyArchimateModelFactory.CreateXml(name);
@@ -175,5 +211,10 @@ public sealed class ModelsController : ControllerBase
     public sealed class CreateModelRequest
     {
         public string? Name { get; init; }
+    }
+
+    public sealed class GenerateRequest
+    {
+        public string? Instruction { get; init; }
     }
 }
