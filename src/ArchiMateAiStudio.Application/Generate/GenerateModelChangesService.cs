@@ -1,4 +1,5 @@
 using ArchiMateAiStudio.Application.Proposals;
+using ArchiMateAiStudio.Application.Rag;
 using ArchiMateAiStudio.Archimate.Digest;
 using ArchiMateAiStudio.Archimate.Parsing;
 using ArchiMateAiStudio.Domain.Patches;
@@ -18,15 +19,18 @@ public sealed class GenerateModelChangesService
     private readonly IArchimateModelRepository _models;
     private readonly ILlmChatClient _llm;
     private readonly ChangeProposalService _proposals;
+    private readonly IRagIndex _rag;
 
     public GenerateModelChangesService(
         IArchimateModelRepository models,
         ILlmChatClient llm,
-        ChangeProposalService proposals)
+        ChangeProposalService proposals,
+        IRagIndex rag)
     {
         _models = models;
         _llm = llm;
         _proposals = proposals;
+        _rag = rag;
     }
 
     public async Task<GenerateModelChangesResult> GenerateAsync(
@@ -57,8 +61,17 @@ public sealed class GenerateModelChangesService
         }
 
         var trimmedInstruction = instruction.Trim();
+        var hits = await _rag.SearchAsync(
+            modelId,
+            trimmedInstruction,
+            ModelRagIndexer.DefaultTopK,
+            cancellationToken);
+        var retrieved = ModelRagIndexer.FormatRetrievedContext(hits);
+
         var userMessage = $"""
             {digest}
+
+            {retrieved}
 
             USER REQUEST:
             {trimmedInstruction}

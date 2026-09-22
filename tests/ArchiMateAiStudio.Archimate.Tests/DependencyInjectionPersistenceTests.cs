@@ -3,6 +3,7 @@ using ArchiMateAiStudio.Infrastructure;
 using ArchiMateAiStudio.Infrastructure.Llm;
 using ArchiMateAiStudio.Infrastructure.Persistence;
 using ArchiMateAiStudio.Infrastructure.Persistence.Ef;
+using ArchiMateAiStudio.Infrastructure.Rag;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,6 +26,8 @@ public class DependencyInjectionPersistenceTests
             provider.GetRequiredService<IChangeProposalRepository>());
         Assert.Null(provider.GetService<StudioDbContext>());
         Assert.IsType<StubLlmChatClient>(provider.GetRequiredService<ILlmChatClient>());
+        Assert.IsType<StubEmbeddingClient>(provider.GetRequiredService<IEmbeddingClient>());
+        Assert.IsType<InMemoryRagIndex>(provider.GetRequiredService<IRagIndex>());
     }
 
     [Fact]
@@ -66,5 +69,6 @@ public class DependencyInjectionPersistenceTests
         Assert.IsType<EfChangeProposalRepository>(
             provider.GetRequiredService<IChangeProposalRepository>());
         Assert.NotNull(provider.GetService<StudioDbContext>());
+        Assert.IsType<EfRagIndex>(provider.GetRequiredService<IRagIndex>());
     }
 }

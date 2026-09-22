@@ -1,5 +1,6 @@
 using ArchiMateAiStudio.Application.Generate;
 using ArchiMateAiStudio.Application.Proposals;
+using ArchiMateAiStudio.Application.Rag;
 using ArchiMateAiStudio.Archimate.Digest;
 using ArchiMateAiStudio.Archimate.Parsing;
 using ArchiMateAiStudio.Domain.Patches;
@@ -23,17 +24,23 @@ public sealed class PdfIngestService
     private readonly IPdfTextExtractor _pdf;
     private readonly ILlmChatClient _llm;
     private readonly ChangeProposalService _proposals;
+    private readonly IRagIndex _rag;
+    private readonly ModelRagIndexer _indexer;
 
     public PdfIngestService(
         IArchimateModelRepository models,
         IPdfTextExtractor pdf,
         ILlmChatClient llm,
-        ChangeProposalService proposals)
+        ChangeProposalService proposals,
+        IRagIndex rag,
+        ModelRagIndexer indexer)
     {
         _models = models;
         _pdf = pdf;
         _llm = llm;
         _proposals = proposals;
+        _rag = rag;
+        _indexer = indexer;
     }
 
     public async Task<PdfIngestResult> IngestAsync(
@@ -85,8 +92,21 @@ public sealed class PdfIngestService
         }
 
         var displayName = string.IsNullOrWhiteSpace(fileName) ? "document.pdf" : fileName.Trim();
+
+        // Index document chunks before the LLM call so retrieval can ground the map.
+        await _indexer.IndexDocumentTextAsync(modelId, extracted, displayName, cancellationToken);
+
+        var hits = await _rag.SearchAsync(
+            modelId,
+            extracted.Length > 400 ? extracted[..400] : extracted,
+            ModelRagIndexer.DefaultTopK,
+            cancellationToken);
+        var retrieved = ModelRagIndexer.FormatRetrievedContext(hits);
+
         var userMessage = $"""
             {digest}
+
+            {retrieved}
 
             SOURCE ARTIFACT: {displayName}
 

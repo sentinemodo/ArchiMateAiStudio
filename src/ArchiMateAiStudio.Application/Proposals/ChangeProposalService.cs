@@ -1,6 +1,7 @@
 using ArchiMateAiStudio.Archimate.Parsing;
 using ArchiMateAiStudio.Archimate.Patching;
 using ArchiMateAiStudio.Archimate.Serialization;
+using ArchiMateAiStudio.Application.Rag;
 using ArchiMateAiStudio.Domain.Patches;
 using ArchiMateAiStudio.Domain.Ports;
 using ArchiMateAiStudio.Domain.Proposals;
@@ -11,13 +12,16 @@ public sealed class ChangeProposalService
 {
     private readonly IChangeProposalRepository _proposals;
     private readonly IArchimateModelRepository _models;
+    private readonly ModelRagIndexer _ragIndexer;
 
     public ChangeProposalService(
         IChangeProposalRepository proposals,
-        IArchimateModelRepository models)
+        IArchimateModelRepository models,
+        ModelRagIndexer ragIndexer)
     {
         _proposals = proposals;
         _models = models;
+        _ragIndexer = ragIndexer;
     }
 
     public async Task<ChangeProposal?> CreateAsync(
@@ -87,6 +91,8 @@ public sealed class ChangeProposalService
             {
                 return ApproveProposalResult.NotFound($"Model '{proposal.ModelId}' was not found.");
             }
+
+            await _ragIndexer.ReindexElementsAsync(model.Id, applyResult.Document, cancellationToken);
 
             var updated = await _proposals.UpdateStatusAsync(
                 proposalId,

@@ -1,5 +1,6 @@
 using ArchiMateAiStudio.Application.Generate;
 using ArchiMateAiStudio.Application.Ingest;
+using ArchiMateAiStudio.Application.Rag;
 using ArchiMateAiStudio.Archimate.Digest;
 using ArchiMateAiStudio.Archimate.Models;
 using ArchiMateAiStudio.Archimate.Parsing;
@@ -15,15 +16,18 @@ public sealed class ModelsController : ControllerBase
     private readonly IArchimateModelRepository _repository;
     private readonly GenerateModelChangesService _generate;
     private readonly PdfIngestService _ingest;
+    private readonly ModelRagIndexer _ragIndexer;
 
     public ModelsController(
         IArchimateModelRepository repository,
         GenerateModelChangesService generate,
-        PdfIngestService ingest)
+        PdfIngestService ingest,
+        ModelRagIndexer ragIndexer)
     {
         _repository = repository;
         _generate = generate;
         _ingest = ingest;
+        _ragIndexer = ragIndexer;
     }
 
     [HttpGet]
@@ -71,6 +75,7 @@ public sealed class ModelsController : ControllerBase
                     ? Path.GetFileNameWithoutExtension(file.FileName)
                     : document.Name;
                 var created = await _repository.CreateAsync(importedName, xml, cancellationToken);
+                await TryReindexAsync(created.Id, xml, cancellationToken);
                 return CreatedAtAction(
                     nameof(Get),
                     new { id = created.Id },
@@ -155,6 +160,43 @@ public sealed class ModelsController : ControllerBase
             fileName);
     }
 
+    [HttpGet("{id:guid}/search")]
+    public async Task<IActionResult> Search(
+        Guid id,
+        [FromQuery] string? q,
+        [FromQuery] int topK = 5,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+        {
+            return BadRequest(new { error = "Query parameter 'q' is required." });
+        }
+
+        if (!await _repository.ExistsAsync(id, cancellationToken))
+        {
+            return NotFound();
+        }
+
+        var hits = await _ragIndexer.SearchAsync(
+            id,
+            q.Trim(),
+            topK <= 0 ? ModelRagIndexer.DefaultTopK : Math.Min(topK, 20),
+            cancellationToken);
+
+        return Ok(new
+        {
+            items = hits.Select(h => new
+            {
+                modelId = h.ModelId,
+                kind = h.Kind.ToString().ToLowerInvariant(),
+                sourceId = h.SourceId,
+                text = h.Text,
+                score = h.Score,
+                metadata = h.Metadata,
+            }),
+        });
+    }
+
     [HttpPost("{id:guid}/generate")]
     public async Task<IActionResult> Generate(
         Guid id,
@@ -234,7 +276,20 @@ public sealed class ModelsController : ControllerBase
     {
         var emptyXml = EmptyArchimateModelFactory.CreateXml(name);
         var empty = await _repository.CreateAsync(name.Trim(), emptyXml, cancellationToken);
+        await TryReindexAsync(empty.Id, emptyXml, cancellationToken);
         return CreatedAtAction(nameof(Get), new { id = empty.Id }, new { id = empty.Id, name = empty.Name });
+    }
+
+    private async Task TryReindexAsync(Guid modelId, string xml, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _ragIndexer.ReindexElementsFromXmlAsync(modelId, xml, cancellationToken);
+        }
+        catch
+        {
+            // Reindex is best-effort for MVP; model CRUD should still succeed.
+        }
     }
 
     private static DocumentStatistics? TryStats(string xml)

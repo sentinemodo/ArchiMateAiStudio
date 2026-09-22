@@ -3,6 +3,7 @@ using ArchiMateAiStudio.Infrastructure.Ingestion;
 using ArchiMateAiStudio.Infrastructure.Llm;
 using ArchiMateAiStudio.Infrastructure.Persistence;
 using ArchiMateAiStudio.Infrastructure.Persistence.Ef;
+using ArchiMateAiStudio.Infrastructure.Rag;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ public static class DependencyInjection
         IConfiguration? configuration)
     {
         RegisterLlmClient(services, configuration);
+        services.AddSingleton<IEmbeddingClient, StubEmbeddingClient>();
 
         var connectionString = ResolveConnectionString(configuration);
         if (!string.IsNullOrWhiteSpace(connectionString))
@@ -27,11 +29,14 @@ public static class DependencyInjection
                 options.UseNpgsql(NormalizeConnectionString(connectionString)));
             services.AddScoped<IArchimateModelRepository, EfArchimateModelRepository>();
             services.AddScoped<IChangeProposalRepository, EfChangeProposalRepository>();
+            // Cosine similarity in C# (embedding stored as float[] JSON). pgvector optional later.
+            services.AddScoped<IRagIndex, EfRagIndex>();
         }
         else
         {
             services.AddSingleton<IArchimateModelRepository, InMemoryArchimateModelRepository>();
             services.AddSingleton<IChangeProposalRepository, InMemoryChangeProposalRepository>();
+            services.AddSingleton<IRagIndex, InMemoryRagIndex>();
         }
 
         return services;

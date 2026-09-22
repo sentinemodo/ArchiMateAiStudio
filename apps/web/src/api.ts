@@ -111,6 +111,24 @@ export async function ingestPdf(modelId: string, file: File): Promise<GenerateRe
   return response.json()
 }
 
+export type SearchHit = {
+  modelId: string
+  kind: string
+  sourceId: string
+  text: string
+  score: number
+  metadata?: Record<string, string>
+}
+
+export async function searchModel(modelId: string, q: string): Promise<SearchHit[]> {
+  const response = await fetch(
+    `/api/v1/models/${modelId}/search?q=${encodeURIComponent(q)}`,
+  )
+  if (!response.ok) throw new Error(await readError(response))
+  const body = await response.json()
+  return body.items ?? []
+}
+
 export async function listProposals(modelId: string): Promise<ProposalItem[]> {
   const response = await fetch(`/api/v1/proposals?modelId=${encodeURIComponent(modelId)}`)
   if (!response.ok) throw new Error(await readError(response))

@@ -13,6 +13,8 @@ public sealed class StudioDbContext : DbContext
 
     public DbSet<ProposalEntity> Proposals => Set<ProposalEntity>();
 
+    public DbSet<RagChunkEntity> RagChunks => Set<RagChunkEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ModelEntity>(entity =>
@@ -35,6 +37,20 @@ public sealed class StudioDbContext : DbContext
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.HasIndex(e => e.ModelId);
             entity.HasIndex(e => e.CreatedAt);
+        });
+
+        modelBuilder.Entity<RagChunkEntity>(entity =>
+        {
+            entity.ToTable("rag_chunks");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Kind).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.SourceId).HasMaxLength(512).IsRequired();
+            entity.Property(e => e.Text).HasColumnType("text").IsRequired();
+            entity.Property(e => e.EmbeddingJson).HasColumnType("text").IsRequired();
+            entity.Property(e => e.MetadataJson).HasColumnType("text").IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.HasIndex(e => e.ModelId);
+            entity.HasIndex(e => new { e.ModelId, e.Kind, e.SourceId }).IsUnique();
         });
     }
 }

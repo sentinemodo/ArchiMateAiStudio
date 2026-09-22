@@ -10,9 +10,11 @@ import {
   listModels,
   listProposals,
   rejectProposal,
+  searchModel,
   type ModelDetail,
   type ModelListItem,
   type ProposalItem,
+  type SearchHit,
 } from './api'
 import './App.css'
 
@@ -28,6 +30,8 @@ function App() {
   const [instruction, setInstruction] = useState(
     'Add ApplicationComponent named Claims Portal.',
   )
+  const [searchQuery, setSearchQuery] = useState('Customer')
+  const [searchHits, setSearchHits] = useState<SearchHit[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
@@ -85,6 +89,7 @@ function App() {
     setSelectedId(null)
     setDetail(null)
     setProposals([])
+    setSearchHits([])
     void run(async () => {
       await refreshList()
     })
@@ -192,6 +197,42 @@ function App() {
                 <h3>Digest</h3>
                 <pre className="digest">{detail.digest}</pre>
               </>
+            )}
+
+            <h3>RAG search</h3>
+            <div className="row">
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search indexed chunks…"
+                disabled={busy}
+                style={{ flex: 1, minWidth: '12rem' }}
+              />
+              <button
+                type="button"
+                disabled={busy || !searchQuery.trim()}
+                onClick={() =>
+                  void run(async () => {
+                    const hits = await searchModel(selectedId, searchQuery.trim())
+                    setSearchHits(hits)
+                    setStatus(`Found ${hits.length} chunk(s)`)
+                  })
+                }
+              >
+                Search
+              </button>
+            </div>
+            {searchHits.length > 0 && (
+              <ul className="list search-hits">
+                {searchHits.map((hit) => (
+                  <li key={`${hit.kind}:${hit.sourceId}`}>
+                    <strong>
+                      {hit.kind} · {hit.score.toFixed(3)}
+                    </strong>
+                    <pre className="digest small">{hit.text}</pre>
+                  </li>
+                ))}
+              </ul>
             )}
 
             <h3>Generate</h3>
