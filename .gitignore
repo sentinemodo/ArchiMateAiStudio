@@ -25,7 +25,9 @@ appsettings.Development.json
 appsettings.Local.json
 **/secrets.json
 
-## Node (Phase 1+ web app)
+## Node (apps/web — commit source; ignore build artifacts)
+apps/web/node_modules/
+apps/web/dist/
 node_modules/
 dist/
 .npm

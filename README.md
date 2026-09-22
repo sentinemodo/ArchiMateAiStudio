@@ -4,7 +4,7 @@ AI-assisted enterprise architecture management in **ArchiMate 3.2** notation —
 
 ## Status
 
-Phase 0 partial — Archimate parse/serialize/XSD/IDs/`ModelPatchParser` work; CRUD API, patch applicator, proposals, EF/RAG, RunPod client, and React SPA still to build. **MVP scope locked:** [`docs/architecture/mvp.md`](docs/architecture/mvp.md) (RAG + PDF + React + Postgres + RunPod; auth deferred). Full design: [`docs/architecture/overview.md`](docs/architecture/overview.md).
+Phase 0 / early Phase 1 — Archimate engine, model CRUD, ChangeProposal approve/reject, NL **generate** (`POST /api/v1/models/{id}/generate` via stub LLM), and React SPA scaffold. Still to build: EF/Postgres, RAG, PDF ingest, real RunPod client. **MVP scope locked:** [`docs/architecture/mvp.md`](docs/architecture/mvp.md). Full design: [`docs/architecture/overview.md`](docs/architecture/overview.md).
 
 ## Quick start
 
@@ -12,16 +12,27 @@ Phase 0 partial — Archimate parse/serialize/XSD/IDs/`ModelPatchParser` work; C
 dotnet restore ArchiMateAiStudio.slnx
 dotnet build ArchiMateAiStudio.slnx
 dotnet test ArchiMateAiStudio.slnx
-dotnet run --project src/ArchiMateAiStudio.Api
+dotnet run --project src/ArchiMateAiStudio.Api --launch-profile http
 ```
 
-API health: `GET http://localhost:5080/api/v1/health` (port may vary — check launchSettings).
+API health: `GET http://localhost:5127/api/v1/health`.
+
+### Web SPA
+
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+
+Vite proxies `/api` → `http://localhost:5127`. See [`apps/web/README.md`](apps/web/README.md).
 
 ## Repository layout
 
 | Path | Purpose |
 |------|---------|
 | `src/ArchiMateAiStudio.*` | Backend modules |
+| `apps/web/` | React + Vite + TypeScript SPA |
 | `tests/` | xUnit tests |
 | `docs/architecture/` | Solution + enterprise + security architecture |
 | `.cursor/` | Repo-local agents (`/project-architect`, `/tdd`, etc.) |
