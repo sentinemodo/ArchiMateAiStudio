@@ -23,6 +23,7 @@ artifacts/
 !.env.example
 appsettings.Development.json
 appsettings.Local.json
+appsettings.*.local.json
 **/secrets.json
 
 ## Node (apps/web — commit source; ignore build artifacts)

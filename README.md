@@ -4,7 +4,7 @@ AI-assisted enterprise architecture management in **ArchiMate 3.2** notation —
 
 ## Status
 
-Phase 0 / early Phase 1 — Archimate engine, model CRUD, ChangeProposal approve/reject, NL **generate** (`POST /api/v1/models/{id}/generate` via stub LLM), and React SPA scaffold. Still to build: EF/Postgres, RAG, PDF ingest, real RunPod client. **MVP scope locked:** [`docs/architecture/mvp.md`](docs/architecture/mvp.md). Full design: [`docs/architecture/overview.md`](docs/architecture/overview.md).
+Phase 0 / early Phase 1 — Archimate engine, model CRUD, ChangeProposal approve/reject, NL **generate** (`POST /api/v1/models/{id}/generate` via stub LLM), EF Core + PostgreSQL (optional), and React SPA scaffold. Still to build: RAG, PDF ingest, real RunPod client. **MVP scope locked:** [`docs/architecture/mvp.md`](docs/architecture/mvp.md). Full design: [`docs/architecture/overview.md`](docs/architecture/overview.md).
 
 ## Quick start
 
@@ -16,6 +16,12 @@ dotnet run --project src/ArchiMateAiStudio.Api --launch-profile http
 ```
 
 API health: `GET http://localhost:5127/api/v1/health`.
+
+### Persistence
+
+By default the API uses **in-memory** repositories (no database required; CI and local smoke work out of the box).
+
+To use **PostgreSQL**, set `DATABASE_URL` (or `ConnectionStrings:Default`) — see [`.env.example`](.env.example). On startup the API runs EF migrations against that database.
 
 ### Web SPA
 
