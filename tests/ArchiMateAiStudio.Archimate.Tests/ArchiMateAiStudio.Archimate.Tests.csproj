@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <None Include="..\fixtures\minimal\minimal.archimate" CopyToOutputDirectory="PreserveNewest" Link="fixtures\minimal\minimal.archimate" />
+    <None Include="..\fixtures\pdf\*.pdf" CopyToOutputDirectory="PreserveNewest" Link="fixtures\pdf\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

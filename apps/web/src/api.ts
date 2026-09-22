@@ -100,6 +100,17 @@ export async function generateChanges(
   return response.json()
 }
 
+export async function ingestPdf(modelId: string, file: File): Promise<GenerateResult> {
+  const form = new FormData()
+  form.append('file', file)
+  const response = await fetch(`/api/v1/models/${modelId}/ingest`, {
+    method: 'POST',
+    body: form,
+  })
+  if (!response.ok) throw new Error(await readError(response))
+  return response.json()
+}
+
 export async function listProposals(modelId: string): Promise<ProposalItem[]> {
   const response = await fetch(`/api/v1/proposals?modelId=${encodeURIComponent(modelId)}`)
   if (!response.ok) throw new Error(await readError(response))

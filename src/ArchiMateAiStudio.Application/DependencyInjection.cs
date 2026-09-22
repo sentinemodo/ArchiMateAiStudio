@@ -1,4 +1,5 @@
 using ArchiMateAiStudio.Application.Generate;
+using ArchiMateAiStudio.Application.Ingest;
 using ArchiMateAiStudio.Application.Proposals;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<ChangeProposalService>();
         services.AddSingleton<GenerateModelChangesService>();
+        services.AddSingleton<PdfIngestService>();
         // TODO(architecture): modules-and-integrations — register MediatR handlers per module.
         return services;
     }

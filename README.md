@@ -4,7 +4,15 @@ AI-assisted enterprise architecture management in **ArchiMate 3.2** notation —
 
 ## Status
 
-Phase 0 / early Phase 1 — Archimate engine, model CRUD, ChangeProposal approve/reject, NL **generate** (`POST /api/v1/models/{id}/generate` via stub LLM), EF Core + PostgreSQL (optional), and React SPA scaffold. Still to build: RAG, PDF ingest, real RunPod client. **MVP scope locked:** [`docs/architecture/mvp.md`](docs/architecture/mvp.md). Full design: [`docs/architecture/overview.md`](docs/architecture/overview.md).
+Phase 0 / early Phase 1 MVP slice:
+
+- Archimate engine, model CRUD, ChangeProposal approve/reject
+- NL **generate** (`POST /api/v1/models/{id}/generate`)
+- PDF **ingest** (`POST /api/v1/models/{id}/ingest`) via PdfPig text layer → LLM → `ChangeProposal` (`source: pdf-ingest`)
+- Real **RunPod** OpenAI-compatible client when `RUNPOD_API_KEY` is set; otherwise `StubLlmChatClient` (CI default)
+- EF Core + PostgreSQL (optional) and React SPA scaffold
+
+**Deferred this slice:** pgvector / RAG chunk retrieve into generate prompts (see below). **MVP scope locked:** [`docs/architecture/mvp.md`](docs/architecture/mvp.md). Full design: [`docs/architecture/overview.md`](docs/architecture/overview.md).
 
 ## Quick start
 
@@ -22,6 +30,28 @@ API health: `GET http://localhost:5127/api/v1/health`.
 By default the API uses **in-memory** repositories (no database required; CI and local smoke work out of the box).
 
 To use **PostgreSQL**, set `DATABASE_URL` (or `ConnectionStrings:Default`) — see [`.env.example`](.env.example). On startup the API runs EF migrations against that database.
+
+### RunPod LLM
+
+Leave RunPod env vars unset to keep the stub client (offline / CI).
+
+```bash
+export RUNPOD_API_KEY=...                    # required to enable real client
+export RUNPOD_OPENAI_BASE_URL=https://api.runpod.ai/v2/<endpointId>/openai/v1
+# or:
+export RUNPOD_CHAT_ENDPOINT_ID=<endpointId>  # builds the URL above
+export LLM_CHAT_MODEL=qwen2.5-72b-instruct   # optional
+```
+
+Never commit real API keys.
+
+### PDF ingest
+
+`POST /api/v1/models/{id}/ingest` with multipart field `file` (PDF). Text is extracted with PdfPig, sent to the LLM with a ModelPatch instruction, and stored as a pending proposal (`source: pdf-ingest`). The SPA model detail page has an **Upload PDF** control.
+
+### RAG (deferred)
+
+Minimal RAG (`RagChunk` + stub embeddings + retrieve into generate) is **not** in this commit. Prefer shipping RunPod + PDF first; add pgvector retrieval when Postgres is the default path for demos.
 
 ### Web SPA
 
@@ -45,7 +75,7 @@ Vite proxies `/api` → `http://localhost:5127`. See [`apps/web/README.md`](apps
 
 ## Cursor agents
 
-Open this folder as the workspace root (or add to multi-root) so agents in [`.cursor/README.md`](.cursor/README.md) are available.
+Open this folder as the workspace root (or add to multi-root) so agents in [`.cursor/README.md`](`.cursor/README.md`) are available.
 
 ## Reference model
 

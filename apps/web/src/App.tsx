@@ -6,6 +6,7 @@ import {
   generateChanges,
   getModel,
   importArchimate,
+  ingestPdf,
   listModels,
   listProposals,
   rejectProposal,
@@ -217,6 +218,26 @@ function App() {
               >
                 Submit generate
               </button>
+              <label className="file-label">
+                Upload PDF
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  disabled={busy}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    e.target.value = ''
+                    if (!file) return
+                    void run(async () => {
+                      const result = await ingestPdf(selectedId, file)
+                      setStatus(
+                        `Ingested PDF → proposal ${result.proposalId} (${result.summary.elementCount} elements)`,
+                      )
+                      await refreshDetail(selectedId)
+                    })
+                  }}
+                />
+              </label>
             </div>
           </section>
 

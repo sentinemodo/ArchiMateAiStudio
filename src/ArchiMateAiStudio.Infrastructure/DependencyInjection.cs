@@ -1,4 +1,5 @@
 using ArchiMateAiStudio.Domain.Ports;
+using ArchiMateAiStudio.Infrastructure.Ingestion;
 using ArchiMateAiStudio.Infrastructure.Llm;
 using ArchiMateAiStudio.Infrastructure.Persistence;
 using ArchiMateAiStudio.Infrastructure.Persistence.Ef;
@@ -17,7 +18,7 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration? configuration)
     {
-        services.AddSingleton<ILlmChatClient, StubLlmChatClient>();
+        RegisterLlmClient(services, configuration);
 
         var connectionString = ResolveConnectionString(configuration);
         if (!string.IsNullOrWhiteSpace(connectionString))
@@ -34,6 +35,68 @@ public static class DependencyInjection
         }
 
         return services;
+    }
+
+    /// <summary>
+    /// When <c>RUNPOD_API_KEY</c> is set, registers <see cref="RunPodOpenAiChatClient"/>;
+    /// otherwise <see cref="StubLlmChatClient"/> (CI / offline default).
+    /// </summary>
+    public static void RegisterLlmClient(IServiceCollection services, IConfiguration? configuration)
+    {
+        var apiKey = FirstNonEmpty(
+            configuration?["RUNPOD_API_KEY"],
+            Environment.GetEnvironmentVariable("RUNPOD_API_KEY"));
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            services.AddSingleton<ILlmChatClient, StubLlmChatClient>();
+        }
+        else
+        {
+            var openAiBaseUrl = FirstNonEmpty(
+                configuration?["RUNPOD_OPENAI_BASE_URL"],
+                Environment.GetEnvironmentVariable("RUNPOD_OPENAI_BASE_URL"));
+            var endpointId = FirstNonEmpty(
+                configuration?["RUNPOD_CHAT_ENDPOINT_ID"],
+                Environment.GetEnvironmentVariable("RUNPOD_CHAT_ENDPOINT_ID"),
+                configuration?["RUNPOD_ENDPOINT_ID"],
+                Environment.GetEnvironmentVariable("RUNPOD_ENDPOINT_ID"));
+            var model = FirstNonEmpty(
+                configuration?["LLM_CHAT_MODEL"],
+                Environment.GetEnvironmentVariable("LLM_CHAT_MODEL"),
+                configuration?["RUNPOD_CHAT_MODEL"],
+                Environment.GetEnvironmentVariable("RUNPOD_CHAT_MODEL")) ?? "default";
+
+            var baseUrl = RunPodOpenAiChatClient.ResolveBaseUrl(openAiBaseUrl, endpointId);
+
+            services.AddHttpClient(nameof(RunPodOpenAiChatClient), client =>
+            {
+                client.BaseAddress = new Uri(baseUrl);
+                client.Timeout = TimeSpan.FromMinutes(2);
+            });
+
+            services.AddSingleton<ILlmChatClient>(sp =>
+            {
+                var http = sp.GetRequiredService<IHttpClientFactory>()
+                    .CreateClient(nameof(RunPodOpenAiChatClient));
+                return new RunPodOpenAiChatClient(http, apiKey, model);
+            });
+        }
+
+        services.AddSingleton<IPdfTextExtractor, PdfPigTextExtractor>();
+    }
+
+    private static string? FirstNonEmpty(params string?[] values)
+    {
+        foreach (var value in values)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value.Trim();
+            }
+        }
+
+        return null;
     }
 
     /// <summary>

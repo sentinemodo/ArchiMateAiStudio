@@ -1,4 +1,5 @@
 using ArchiMateAiStudio.Application.Generate;
+using ArchiMateAiStudio.Application.Ingest;
 using ArchiMateAiStudio.Archimate.Digest;
 using ArchiMateAiStudio.Archimate.Models;
 using ArchiMateAiStudio.Archimate.Parsing;
@@ -13,13 +14,16 @@ public sealed class ModelsController : ControllerBase
 {
     private readonly IArchimateModelRepository _repository;
     private readonly GenerateModelChangesService _generate;
+    private readonly PdfIngestService _ingest;
 
     public ModelsController(
         IArchimateModelRepository repository,
-        GenerateModelChangesService generate)
+        GenerateModelChangesService generate,
+        PdfIngestService ingest)
     {
         _repository = repository;
         _generate = generate;
+        _ingest = ingest;
     }
 
     [HttpGet]
@@ -159,6 +163,50 @@ public sealed class ModelsController : ControllerBase
     {
         var instruction = request?.Instruction ?? string.Empty;
         var result = await _generate.GenerateAsync(id, instruction, cancellationToken);
+
+        return result.Outcome switch
+        {
+            GenerateModelChangesOutcome.Success => Ok(new
+            {
+                proposalId = result.Proposal!.Id,
+                status = result.Proposal.Status.ToString(),
+                source = result.Proposal.Source,
+                summary = new
+                {
+                    elementCount = result.Summary!.ElementCount,
+                    relationshipCount = result.Summary.RelationshipCount,
+                    diagramCount = result.Summary.DiagramCount,
+                    elementNames = result.Summary.ElementNames,
+                },
+                patch = result.Proposal.Patch,
+            }),
+            GenerateModelChangesOutcome.NotFound => NotFound(new { error = result.Message }),
+            GenerateModelChangesOutcome.BadRequest => BadRequest(new { error = result.Message }),
+            _ => StatusCode(StatusCodes.Status500InternalServerError),
+        };
+    }
+
+    [HttpPost("{id:guid}/ingest")]
+    [RequestSizeLimit(20_000_000)]
+    public async Task<IActionResult> Ingest(Guid id, CancellationToken cancellationToken)
+    {
+        if (!Request.HasFormContentType)
+        {
+            return BadRequest(new { error = "Expected multipart form with PDF file field 'file'." });
+        }
+
+        var file = Request.Form.Files.GetFile("file");
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(new { error = "PDF file is required (form field 'file')." });
+        }
+
+        await using var stream = file.OpenReadStream();
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms, cancellationToken);
+        var bytes = ms.ToArray();
+
+        var result = await _ingest.IngestAsync(id, bytes, file.FileName, cancellationToken);
 
         return result.Outcome switch
         {
