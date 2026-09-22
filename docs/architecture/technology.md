@@ -1,7 +1,8 @@
 # ArchiMate AI Studio — technology stack
 
 **Parent:** [`overview.md`](overview.md)  
-**Last updated:** 2026-09-11
+**MVP:** [`mvp.md`](mvp.md)  
+**Last updated:** 2026-09-22
 
 ---
 
@@ -9,23 +10,23 @@
 
 | Layer | Choice | Rationale |
 |-------|--------|-----------|
-| **Frontend** | React 19 + Vite + TypeScript | Rich diagram review UI; aligns with workspace conventions |
+| **Frontend** | **React 19 + Vite + TypeScript** | **Confirmed for MVP** — model shell, generate, PDF upload, proposal review |
 | **UI components** | Tailwind CSS + shadcn/ui | Fast iteration |
-| **Diagram canvas** | **React Flow** (+ custom ArchiMate node shapes) | Layout preview, proposal review; not full Archi replacement |
+| **Diagram canvas** | **React Flow** (+ custom ArchiMate node shapes) | Post-MVP polish OK; MVP may use simple lists/diffs |
 | **API** | **ASP.NET Core 9** Web API | User preference; strong XML/XSD tooling |
-| **ORM** | **EF Core 9** + Npgsql | Metadata, jobs, audit, vectors |
-| **Auth** | **Clerk** (JWT) | Multi-tenant SaaS-ready |
-| **Primary DB** | **PostgreSQL 16** (Neon) + **pgvector** + **pg_trgm** | RAG + hybrid search in one store |
-| **Cache / queue** | **Redis** (Upstash) | Hangfire, rate limits, prompt cache |
+| **ORM** | **EF Core 9** + Npgsql | Metadata, jobs, audit, vectors — **required for MVP** |
+| **Auth** | **None (MVP)** → **Clerk** post-MVP | Auth deferred; open local/dev API |
+| **Primary DB** | **PostgreSQL 16** (Neon) + **pgvector** + **pg_trgm** | RAG + hybrid search — **required for MVP** |
+| **Cache / queue** | **Redis** (Upstash) | Hangfire; local in-process jobs acceptable for early MVP |
 | **Background jobs** | **Hangfire** | Ingestion, LLM, re-index |
-| **Object storage** | **Cloudflare R2** | Raw uploads, exported models |
-| **LLM inference** | **RunPod Serverless** | User constraint; GPU on demand |
-| **PDF** | **PdfPig** | Pure C# text extraction |
-| **DOCX** | **DocumentFormat.OpenXml** | Microsoft-compatible |
-| **OCR fallback** | **Tesseract** via **Tesseract.Net** | Offline fallback |
+| **Object storage** | Local disk or **Cloudflare R2** | Raw uploads; local OK for MVP |
+| **LLM inference** | **RunPod Serverless** | Real client for MVP; stub in CI |
+| **PDF** | **PdfPig** | Pure C# text extraction — **MVP path** |
+| **DOCX** | **DocumentFormat.OpenXml** | **Post-MVP** |
+| **OCR fallback** | **Tesseract** via **Tesseract.Net** | **Post-MVP** (vision out of MVP) |
 | **XML/XSD** | **System.Xml.Schema** + optional **XmlSchemaClassGenerator** | Exchange format fidelity |
 | **JSON schema** | **System.Text.Json** + **JsonSchema.Net** | ModelPatch validation |
-| **Observability** | **Sentry** + **OpenTelemetry** | LLM job tracing |
+| **Observability** | **Sentry** + **OpenTelemetry** | LLM job tracing (light touch OK for MVP) |
 
 ---
 
@@ -65,18 +66,19 @@ Use **OpenAI-compatible** handlers where available (vLLM, TGI) to minimize custo
 
 | Option | Verdict |
 |--------|---------|
-| **React SPA (Vite)** | **Selected** — diagram review, ingestion UX, Clerk integration |
+| **React SPA (Vite)** | **Selected for MVP** — generate, PDF upload, proposal review; Clerk later |
 | **Blazor WASM** | Rejected — weaker diagram ecosystem |
 | **Archi plugin fork** | Rejected — desktop-only; learn from Archi-LLM instead |
 
-**Key screens:**
+**MVP screens:**
 
-- Model dashboard (digest, recent proposals)
-- Graph explorer (search, filter by layer)
-- Ingestion upload + side-by-side review
-- Proposal diff (elements/relationships added/changed)
-- View consolidation wizard
-- Agent run tracker
+- Model list / import / export
+- Generate (NL instruction) + job status
+- Proposal list + approve/reject (+ simple patch summary)
+- PDF upload + ingestion job status
+- Optional: basic hybrid search
+
+**Post-MVP screens:** graph explorer, view consolidation wizard, agent run tracker, Clerk sign-in.
 
 ---
 
@@ -102,10 +104,10 @@ Use **OpenAI-compatible** handlers where available (vLLM, TGI) to minimize custo
 
 ## 7. Security technology (handoff to `/cybersecurity-design`)
 
-- Clerk orgs for tenant isolation
-- Row-level security on `modelId` + `tenantId`
-- Encrypt R2 objects with SSE; optional CMK Phase 2
+- **MVP:** no Clerk; single-user local/demo — do not expose open API on the public internet
+- **Post-MVP:** Clerk orgs for tenant isolation; row-level security on `modelId` + `tenantId`
+- Encrypt R2 objects with SSE; optional CMK when multi-tenant
 - RunPod: no training on customer data; DPA review required for prod
-- API rate limiting via Redis sliding window
+- API rate limiting via Redis sliding window (post-MVP or when exposed)
 
-See future `cybersecurity/security-requirements.md` after security agent pass.
+See [`cybersecurity/security-requirements.md`](cybersecurity/security-requirements.md).

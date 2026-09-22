@@ -1,11 +1,12 @@
 # ArchiMate AI Studio — API design
 
 **Parent:** [`overview.md`](overview.md)  
-**Last updated:** 2026-09-11
+**Last updated:** 2026-09-22
 
 **Base URL:** `/api/v1`  
-**Auth:** `Authorization: Bearer <Clerk JWT>`  
-**Tenant:** Resolved from Clerk org claim → `tenantId`
+**Auth (MVP):** none — local/dev open API (no JWT). Do not expose publicly without auth.  
+**Auth (post-MVP):** `Authorization: Bearer <Clerk JWT>`; tenant from Clerk org claim → `tenantId`  
+**MVP scope:** [`mvp.md`](mvp.md), [ADR-0006](adr/ADR-0006-mvp-scope-and-auth-deferral.md)
 
 ---
 
@@ -272,4 +273,4 @@ Admin/background; rebuilds `rag_chunks`.
 }
 ```
 
-HTTP codes: 400 validation, 401 auth, 403 tenant, 404, 409 concurrent edit, 429 rate limit, 502 RunPod upstream.
+HTTP codes: 400 validation, 401 auth (post-MVP), 403 tenant (post-MVP), 404, 409 concurrent edit, 429 rate limit, 502 RunPod upstream.

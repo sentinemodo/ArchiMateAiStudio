@@ -4,7 +4,7 @@ AI-assisted enterprise architecture management in **ArchiMate 3.2** notation —
 
 ## Status
 
-Phase 0 skeleton — solution builds, tests pass. See [`docs/architecture/overview.md`](docs/architecture/overview.md) for the full design.
+Phase 0 partial — Archimate parse/serialize/XSD/IDs/`ModelPatchParser` work; CRUD API, patch applicator, proposals, EF/RAG, RunPod client, and React SPA still to build. **MVP scope locked:** [`docs/architecture/mvp.md`](docs/architecture/mvp.md) (RAG + PDF + React + Postgres + RunPod; auth deferred). Full design: [`docs/architecture/overview.md`](docs/architecture/overview.md).
 
 ## Quick start
 
@@ -36,6 +36,6 @@ Round-trip tests use the **ArchiSurance 3.2** case study from The Open Group ([Y
 
 ## Architecture docs
 
-Start at [`docs/architecture/overview.md`](docs/architecture/overview.md).
+Start at [`docs/architecture/mvp.md`](docs/architecture/mvp.md), then [`docs/architecture/overview.md`](docs/architecture/overview.md).
 
 Workspace mirror (optional): `Architectures/archimate-ai-studio/` in the parent Cursor workspace.
