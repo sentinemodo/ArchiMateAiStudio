@@ -94,14 +94,17 @@ MVP is done when all of the following work end-to-end on a local (or Neon) Postg
 
 | Capability | State |
 |------------|-------|
-| Parse / serialize / XSD / Archi IDs / `ModelPatchParser` | Partial Phase 0 — works |
-| Model CRUD API | Missing |
-| Patch applicator | Missing |
-| ChangeProposal flow | Missing |
-| RunPod client | Stub only (`StubLlm`) |
-| EF Core / Postgres / pgvector | Missing |
-| React SPA | Missing |
-| PDF ingest / RAG | Missing |
+| Parse / serialize / XSD / Archi IDs / `ModelPatchParser` | **Done** |
+| Model CRUD API | **Done** (`/api/v1/models`) |
+| Patch applicator | **Done** |
+| ChangeProposal flow | **Done** (create / approve / reject) |
+| Generate + RunPod client | **Done** (RunPod when env set; stub in CI) |
+| EF Core / Postgres | **Done** (optional; in-memory fallback) |
+| React SPA | **Done** (`apps/web`) |
+| PDF ingest | **Done** (PdfPig text layer) |
+| RAG | **Done** (stub embeddings; search + retrieve into prompts) |
+| Demo seed / ArchiSurance script | Open (backlog §7 F) |
+| Auth | Deferred (ADR-0006) |
 
 ---
 
@@ -109,39 +112,14 @@ MVP is done when all of the following work end-to-end on a local (or Neon) Postg
 
 Implement in order; each slice should be test-first.
 
-### A — Complete Phase 0 (model foundation)
+### A–E — Shipped
 
-1. Patch applicator (`ModelPatch` → `.archimate` graph/XML) + validation gate.
-2. Domain ports: model store, proposal store (in-memory OK until EF).
-3. API: create/import/list/get/export models.
-4. ArchiSurance round-trip + apply-patch unit tests.
+Items 1–15 (patch applicator through PDF + RAG + SPA) are implemented on the MVP branch. Prefer regression tests over rework unless demos fail.
 
-### B — Persistence
+### F — Demo hardening (remaining)
 
-5. EF Core + Neon/Postgres schema: models, proposals, jobs, `rag_chunks`.
-6. pgvector extension + embed upsert/query.
-7. Swap in-memory stores for EF adapters.
-
-### C — Phase 1 (LLM patch loop)
-
-8. Real `ILlmChatClient` RunPod adapter; CI keeps stub.
-9. Generate use case: digest + RAG context → chat → parse `ModelPatch` → `ChangeProposal`.
-10. API: `POST .../generate`, proposals list/approve/reject.
-11. Approve applies patch + bumps version + re-indexes model chunks.
-
-### D — React SPA shell
-
-12. Vite + TS app; proxy to API; model list/detail; generate form; proposal queue (approve/reject); export download.
-
-### E — Phase 2 subset (PDF + RAG)
-
-13. PdfPig text extract; ingest job; document chunks + embeddings.
-14. Map facts → `ModelPatch` → proposal (reuse LLM path).
-15. UI: PDF upload + job status; search endpoint wired for demo.
-
-### F — Demo hardening
-
-16. Seed/script for ArchiSurance + sample PDF; README demo steps; env template for RunPod + `DATABASE_URL`.
+16. Seed/script for ArchiSurance + sample PDF; README demo walkthrough with RunPod + `DATABASE_URL`.
+17. Optional: RunPod embedding endpoint replacing `StubEmbeddingClient`; native pgvector distance ops.
 
 ---
 

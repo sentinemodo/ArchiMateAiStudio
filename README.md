@@ -4,15 +4,16 @@ AI-assisted enterprise architecture management in **ArchiMate 3.2** notation —
 
 ## Status
 
-Phase 0 / early Phase 1 MVP slice:
+MVP vertical slice is **implemented** (auth still deferred):
 
-- Archimate engine, model CRUD, ChangeProposal approve/reject
-- NL **generate** (`POST /api/v1/models/{id}/generate`)
-- PDF **ingest** (`POST /api/v1/models/{id}/ingest`) via PdfPig text layer → LLM → `ChangeProposal` (`source: pdf-ingest`)
-- Real **RunPod** OpenAI-compatible client when `RUNPOD_API_KEY` is set; otherwise `StubLlmChatClient` (CI default)
-- EF Core + PostgreSQL (optional) and React SPA scaffold
+- Archimate engine, patch applicator, model CRUD, ChangeProposal approve/reject
+- NL **generate** (`POST /api/v1/models/{id}/generate`) with RAG context
+- PDF **ingest** (`POST /api/v1/models/{id}/ingest`) via PdfPig → LLM → `ChangeProposal`
+- **RAG** index/search (`GET /api/v1/models/{id}/search?q=`) — stub embeddings; EF store when Postgres is configured
+- **RunPod** OpenAI-compatible client when `RUNPOD_API_KEY` is set; else `StubLlmChatClient`
+- EF Core + PostgreSQL (optional; in-memory default) and React SPA (`apps/web`)
 
-**Deferred this slice:** pgvector / RAG chunk retrieve into generate prompts (see below). **MVP scope locked:** [`docs/architecture/mvp.md`](docs/architecture/mvp.md). Full design: [`docs/architecture/overview.md`](docs/architecture/overview.md).
+**Still open for demo polish:** ArchiSurance seed script, real embedding endpoint, native pgvector ops (cosine currently in-process). Scope: [`docs/architecture/mvp.md`](docs/architecture/mvp.md).
 
 ## Quick start
 
@@ -49,9 +50,9 @@ Never commit real API keys.
 
 `POST /api/v1/models/{id}/ingest` with multipart field `file` (PDF). Text is extracted with PdfPig, sent to the LLM with a ModelPatch instruction, and stored as a pending proposal (`source: pdf-ingest`). The SPA model detail page has an **Upload PDF** control.
 
-### RAG (deferred)
+### RAG
 
-Minimal RAG (`RagChunk` + stub embeddings + retrieve into generate) is **not** in this commit. Prefer shipping RunPod + PDF first; add pgvector retrieval when Postgres is the default path for demos.
+Element chunks are re-indexed on create/import/approve; PDF paragraphs are chunked on ingest. Generate and PDF map inject top-5 hits as retrieved context. Search: `GET /api/v1/models/{id}/search?q=` (also on the SPA model detail page). Embeddings use `StubEmbeddingClient` until a RunPod embed endpoint is configured.
 
 ### Web SPA
 
