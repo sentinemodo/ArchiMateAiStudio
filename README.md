@@ -4,7 +4,16 @@ AI-assisted enterprise architecture management in **ArchiMate 3.2** notation —
 
 ## Status
 
-Phase 0 skeleton — solution builds, tests pass. See [`docs/architecture/overview.md`](docs/architecture/overview.md) for the full design.
+MVP vertical slice is **implemented** (auth still deferred):
+
+- Archimate engine, patch applicator, model CRUD, ChangeProposal approve/reject
+- NL **generate** (`POST /api/v1/models/{id}/generate`) with RAG context
+- PDF **ingest** (`POST /api/v1/models/{id}/ingest`) via PdfPig → LLM → `ChangeProposal`
+- **RAG** index/search (`GET /api/v1/models/{id}/search?q=`) — stub embeddings; EF store when Postgres is configured
+- **RunPod** OpenAI-compatible client when `RUNPOD_API_KEY` is set; else `StubLlmChatClient`
+- EF Core + PostgreSQL (optional; in-memory default) and React SPA (`apps/web`)
+
+**Still open for demo polish:** ArchiSurance seed script, real embedding endpoint, native pgvector ops (cosine currently in-process). Scope: [`docs/architecture/mvp.md`](docs/architecture/mvp.md).
 
 ## Quick start
 
@@ -12,23 +21,62 @@ Phase 0 skeleton — solution builds, tests pass. See [`docs/architecture/overvi
 dotnet restore ArchiMateAiStudio.slnx
 dotnet build ArchiMateAiStudio.slnx
 dotnet test ArchiMateAiStudio.slnx
-dotnet run --project src/ArchiMateAiStudio.Api
+dotnet run --project src/ArchiMateAiStudio.Api --launch-profile http
 ```
 
-API health: `GET http://localhost:5080/api/v1/health` (port may vary — check launchSettings).
+API health: `GET http://localhost:5127/api/v1/health`.
+
+### Persistence
+
+By default the API uses **in-memory** repositories (no database required; CI and local smoke work out of the box).
+
+To use **PostgreSQL**, set `DATABASE_URL` (or `ConnectionStrings:Default`) — see [`.env.example`](.env.example). On startup the API runs EF migrations against that database.
+
+### RunPod LLM
+
+Leave RunPod env vars unset to keep the stub client (offline / CI).
+
+```bash
+export RUNPOD_API_KEY=...                    # required to enable real client
+export RUNPOD_OPENAI_BASE_URL=https://api.runpod.ai/v2/<endpointId>/openai/v1
+# or:
+export RUNPOD_CHAT_ENDPOINT_ID=<endpointId>  # builds the URL above
+export LLM_CHAT_MODEL=qwen2.5-72b-instruct   # optional
+```
+
+Never commit real API keys.
+
+### PDF ingest
+
+`POST /api/v1/models/{id}/ingest` with multipart field `file` (PDF). Text is extracted with PdfPig, sent to the LLM with a ModelPatch instruction, and stored as a pending proposal (`source: pdf-ingest`). The SPA model detail page has an **Upload PDF** control.
+
+### RAG
+
+Element chunks are re-indexed on create/import/approve; PDF paragraphs are chunked on ingest. Generate and PDF map inject top-5 hits as retrieved context. Search: `GET /api/v1/models/{id}/search?q=` (also on the SPA model detail page). Embeddings use `StubEmbeddingClient` until a RunPod embed endpoint is configured.
+
+### Web SPA
+
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+
+Vite proxies `/api` → `http://localhost:5127`. See [`apps/web/README.md`](apps/web/README.md).
 
 ## Repository layout
 
 | Path | Purpose |
 |------|---------|
 | `src/ArchiMateAiStudio.*` | Backend modules |
+| `apps/web/` | React + Vite + TypeScript SPA |
 | `tests/` | xUnit tests |
 | `docs/architecture/` | Solution + enterprise + security architecture |
 | `.cursor/` | Repo-local agents (`/project-architect`, `/tdd`, etc.) |
 
 ## Cursor agents
 
-Open this folder as the workspace root (or add to multi-root) so agents in [`.cursor/README.md`](.cursor/README.md) are available.
+Open this folder as the workspace root (or add to multi-root) so agents in [`.cursor/README.md`](`.cursor/README.md`) are available.
 
 ## Reference model
 
@@ -36,6 +84,6 @@ Round-trip tests use the **ArchiSurance 3.2** case study from The Open Group ([Y
 
 ## Architecture docs
 
-Start at [`docs/architecture/overview.md`](docs/architecture/overview.md).
+Start at [`docs/architecture/mvp.md`](docs/architecture/mvp.md), then [`docs/architecture/overview.md`](docs/architecture/overview.md).
 
 Workspace mirror (optional): `Architectures/archimate-ai-studio/` in the parent Cursor workspace.

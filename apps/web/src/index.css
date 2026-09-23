@@ -1,0 +1,46 @@
+:root {
+  color: #1a1f24;
+  background: #eef1f4;
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  line-height: 1.45;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, #d9e6ef 0%, transparent 45%),
+    linear-gradient(180deg, #eef1f4 0%, #e3e8ec 100%);
+}
+
+#root {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+button,
+.button-link,
+.file-label {
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled,
+.file-label:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+a {
+  color: #0b5fff;
+}

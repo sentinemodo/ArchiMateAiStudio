@@ -1,8 +1,10 @@
 # ArchiMate AI Studio — documentation index
 
-**Last updated:** 2026-09-11
+**Last updated:** 2026-09-22
 
 Authoritative external references for implementers. Summaries only — consult linked sources for normative detail.
+
+**Start here for MVP:** [`mvp.md`](mvp.md) (locked scope) → [`overview.md`](overview.md) → [`adr/ADR-0006-mvp-scope-and-auth-deferral.md`](adr/ADR-0006-mvp-scope-and-auth-deferral.md).
 
 **Offline copies:** Open Group PDFs, ArchiSurance practice outline, and Archi-LLM-plugin docs live in [`../fixtures/`](../fixtures/) — see [`../fixtures/REVIEW.md`](../fixtures/REVIEW.md) for upstream repo review.
 

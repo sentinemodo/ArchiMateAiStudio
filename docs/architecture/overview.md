@@ -2,9 +2,9 @@
 
 **Product (working name):** **ArchiMate AI Studio** — an application for managing enterprise architecture and processes in **ArchiMate 3.2** notation, with AI-assisted ingestion, extrapolation, multi-agent enrichment, and model quality review.
 
-**Status:** Greenfield architecture — ready for `/project-initializer` and implementation agents.  
-**Implementation repo (planned):** `GitHub/Repositories/ArchiMateAiStudio` (.NET monorepo + React SPA).  
-**Last updated:** 2026-09-11
+**Status:** Phase 0 partial (parse/serialize/XSD/IDs/`ModelPatchParser`). MVP scope locked — see [`mvp.md`](mvp.md).  
+**Implementation repo:** ArchiMate AI Studio (.NET monorepo + React SPA).  
+**Last updated:** 2026-09-22
 
 ---
 
@@ -530,7 +530,7 @@ See [`view-management.md`](view-management.md).
 
 ## 11. API design (summary)
 
-Base path: `/api/v1`. Auth: Clerk JWT bearer.
+Base path: `/api/v1`. **MVP auth:** none (open local/dev API). **Post-MVP:** Clerk JWT bearer.
 
 | Method | Path | Purpose |
 |--------|------|---------|
@@ -569,21 +569,32 @@ Full OpenAPI shapes: [`api-design.md`](api-design.md).
 
 ### 12.2 MVP topology (budget-conscious)
 
-| Service | Host |
-|---------|------|
-| `archi-api` + Hangfire worker | **Railway** (single service, 2 processes) |
-| PostgreSQL + pgvector | **Neon** |
-| Redis | **Upstash** |
-| Object storage | **Cloudflare R2** |
-| Frontend | **Vercel** or Cloudflare Pages |
-| LLM | **RunPod Serverless** (pay per second) |
-| Auth | **Clerk** |
+**Locked MVP:** React SPA + ASP.NET API + PostgreSQL/pgvector (Neon) + RunPod + PDF/RAG. **Auth deferred** (no Clerk). See [`mvp.md`](mvp.md) and [ADR-0006](adr/ADR-0006-mvp-scope-and-auth-deferral.md).
+
+| Service | Host | MVP notes |
+|---------|------|-----------|
+| `archi-api` + Hangfire worker | **Railway** or local (single service) | Open API; no JWT |
+| PostgreSQL + pgvector | **Neon** (or local Postgres) | Required for models, proposals, RAG |
+| Redis | **Upstash** or local | Hangfire; optional if in-process jobs for local demo |
+| Object storage | Local disk or **Cloudflare R2** | PDF uploads |
+| Frontend | **React SPA** (Vite + TS) on **Vercel** / Pages / local | Required for MVP demos |
+| LLM | **RunPod Serverless** | Real client; stub in CI only |
+| Auth | **None (MVP)** → Clerk post-MVP | Do not block demos on Clerk |
+
+```mermaid
+flowchart TB
+  SPA["React SPA\nVite + TypeScript"] --> API["ASP.NET Core /api/v1\n(no auth)"]
+  API --> PG[(PostgreSQL + pgvector)]
+  API --> RP[RunPod ILlmChatClient]
+  API --> UP[Uploads local/R2]
+```
 
 ### 12.3 Secrets
 
 - `RUNPOD_API_KEY`, endpoint IDs per workload
-- `DATABASE_URL`, `REDIS_URL`, `R2_*`, `CLERK_*`
-- Never send raw `.archimate` to RunPod without tenant consent flag
+- `DATABASE_URL`, optional `REDIS_URL`, `R2_*`
+- `CLERK_*` — **post-MVP only**
+- Never send raw `.archimate` to RunPod without tenant consent flag (relevant when multi-tenant ships)
 
 See [`delivery/cicd-conventions.md`](delivery/cicd-conventions.md) and [`deployment.md`](deployment.md).
 
@@ -635,13 +646,15 @@ See [`archi-llm-plugin-learnings.md`](archi-llm-plugin-learnings.md) for file-le
 
 ## 14. Phased delivery
 
-| Phase | Deliverable |
-|-------|-------------|
-| **0 — Foundation** | Model CRUD, XSD validation, import/export, auth, empty React shell |
-| **1 — LLM patch loop** | RunPod text endpoint, digest + TOON prompts, ChangeProposal UI |
-| **2 — Ingestion** | PDF/text + vision diagrams, RAG index, fact extraction |
-| **3 — Agents & review** | Agent orchestrator (manual upload MVP), static review, view consolidation |
-| **4 — Polish** | Archi round-trip test suite, performance, org standards library |
+**MVP (locked)** = **Phase 0 complete** + **Phase 1** + **Phase 2 PDF/RAG subset** (PdfPig text; no vision/DOCX). Auth, agents, and view consolidation are **out of MVP**. Detail: [`mvp.md`](mvp.md).
+
+| Phase | Deliverable | vs MVP |
+|-------|-------------|--------|
+| **0 — Foundation** | Model CRUD, XSD validation, import/export, patch applicator, React SPA shell | **Required** (auth removed from Phase 0) |
+| **1 — LLM patch loop** | Real RunPod client, digest + RAG context, `ChangeProposal` API + UI | **Required** |
+| **2 — Ingestion & RAG** | PDF/text + pgvector index + fact→patch; vision/DOCX later | **MVP = PDF text + RAG only** |
+| **3 — Agents & review** | Agent orchestrator, static review, view consolidation | **Post-MVP** |
+| **4 — Polish** | Auth (Clerk), multi-tenant, performance, org standards library | **Post-MVP** |
 
 ---
 
@@ -649,6 +662,7 @@ See [`archi-llm-plugin-learnings.md`](archi-llm-plugin-learnings.md) for file-le
 
 | Document | Contents |
 |----------|----------|
+| [`mvp.md`](mvp.md) | **Locked MVP** — scope, demos, `/tdd` backlog, risks |
 | [`modules-and-integrations.md`](modules-and-integrations.md) | Bounded contexts, events, anti-patterns |
 | [`technology.md`](technology.md) | Stack versions, libraries |
 | [`ingestion-pipeline.md`](ingestion-pipeline.md) | Stage contracts, OCR/vision |
@@ -661,7 +675,7 @@ See [`archi-llm-plugin-learnings.md`](archi-llm-plugin-learnings.md) for file-le
 | [`archi-llm-plugin-learnings.md`](archi-llm-plugin-learnings.md) | Detailed plugin review |
 | [`docs-index.md`](docs-index.md) | External references |
 | [`dependencies/repo-map.md`](dependencies/repo-map.md) | Cross-repo map |
-| [`adr/`](adr/) | Decision records |
+| [`adr/`](adr/) | Decision records (incl. ADR-0006 MVP) |
 | [`delivery/cicd-conventions.md`](delivery/cicd-conventions.md) | Branching, CI |
 
-**Implementers start here:** this file → `technology.md` → `modules-and-integrations.md` → relevant deep dive for your sprint.
+**Implementers start here:** [`mvp.md`](mvp.md) → this file → `technology.md` → `modules-and-integrations.md` → deep dive for your sprint.

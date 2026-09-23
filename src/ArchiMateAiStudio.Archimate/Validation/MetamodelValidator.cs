@@ -47,7 +47,46 @@ public static class MetamodelValidator
             or "ApplicationService" or "Node" or "TechnologyService" or "Requirement" or "Goal"
             or "Constraint" or "DataObject" or "BusinessObject" or "WorkPackage" or "Plateau" or "Gap";
 
+    public static bool TryNormalizeRelationshipType(string rawType, out string normalizedType)
+    {
+        if (string.IsNullOrWhiteSpace(rawType))
+        {
+            normalizedType = string.Empty;
+            return false;
+        }
+
+        if (Aliases.TryGetValue(rawType.Trim(), out var aliased)
+            && IsKnownRelationshipType(aliased))
+        {
+            normalizedType = aliased;
+            return true;
+        }
+
+        normalizedType = rawType.Trim();
+        return IsKnownRelationshipType(normalizedType);
+    }
+
+    public static bool IsKnownRelationshipType(string type) =>
+        type is "ServingRelationship" or "RealizationRelationship" or "AssignmentRelationship"
+            or "FlowRelationship" or "AccessRelationship" or "CompositionRelationship"
+            or "AggregationRelationship" or "AssociationRelationship" or "InfluenceRelationship"
+            or "TriggeringRelationship" or "SpecializationRelationship";
+
     public static bool IsViewType(string type) =>
         type.Equals("View", StringComparison.OrdinalIgnoreCase)
         || type.Equals("Diagram", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Maps a normalized element type to the Archi folder <c>type</c> attribute.
+    /// </summary>
+    public static string FolderTypeForElement(string normalizedElementType) =>
+        normalizedElementType switch
+        {
+            "BusinessActor" or "BusinessProcess" or "BusinessService" or "BusinessObject" => "business",
+            "ApplicationComponent" or "ApplicationService" or "DataObject" => "application",
+            "Node" or "TechnologyService" => "technology",
+            "Requirement" or "Goal" or "Constraint" => "motivation",
+            "WorkPackage" or "Plateau" or "Gap" => "implementation_migration",
+            _ => "other",
+        };
 }
